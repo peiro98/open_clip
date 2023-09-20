@@ -7,6 +7,9 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
+from torch import Tensor
+from torchvision.transforms import Normalize, Compose
+
 import torch
 
 from .constants import OPENAI_DATASET_MEAN, OPENAI_DATASET_STD
@@ -24,6 +27,22 @@ from .tokenizer import HFTokenizer, tokenize
 HF_HUB_PREFIX = 'hf-hub:'
 _MODEL_CONFIG_PATHS = [Path(__file__).parent / f"model_configs/"]
 _MODEL_CONFIGS = {}  # directory (model_name: config) of model architecture configs
+
+
+class AddInverse(torch.nn.Module):
+    """To a [B, C, H, W] input add the inverse channels of the given one to it.
+    Results in a [B, 2C, H, W] output. Single image [C, H, W] is also accepted.
+
+    Args:
+        dim (int): where to add channels to. Default: -3
+    """
+
+    def __init__(self, dim: int = -3):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, in_tensor: Tensor) -> Tensor:
+        return torch.cat([in_tensor, 1 - in_tensor], dim=self.dim)
 
 
 def _natural_key(string_):
@@ -344,6 +363,10 @@ def create_model_and_transforms(
         mean=image_mean,
         std=image_std,
     )
+
+    if 'bcos' in model_name:
+        preprocess_train = Compose([preprocess_train, AddInverse()])
+        preprocess_val = Compose([preprocess_val, AddInverse()])
 
     return model, preprocess_train, preprocess_val
 

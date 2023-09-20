@@ -123,7 +123,7 @@ def _build_vision_tower(
         )
     elif vision_cfg.bcos:
         print("creating a bcos model")
-        visual = torch.hub.load('B-cos/B-cos-v2', 'simple_vit_b_patch16_224', channels=3)
+        visual = torch.hub.load('B-cos/B-cos-v2', 'simple_vit_b_patch16_224')
 
         visual = visual[0]  # remove the logits layer
 
