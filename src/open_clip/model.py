@@ -46,7 +46,7 @@ class CLIPVisionCfg:
     timm_drop: float = 0.  # head dropout
     timm_drop_path: Optional[float] = None  # backbone stochastic depth
 
-    bcos: Optional[bool] = True
+    bcos: Optional[bool] = False
 
 
 @dataclass
