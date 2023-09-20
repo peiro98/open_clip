@@ -125,12 +125,13 @@ def _build_vision_tower(
         print("creating a bcos model")
         visual = torch.hub.load('B-cos/B-cos-v2', 'simple_vit_b_patch16_224')
 
-        visual = visual[0]  # remove the logits layer
+        #visual = visual[0]  # remove the logits layer
+        visual[1] = nn.Identity()
 
-        visual.linear_head[1] = nn.Identity()  # remove the classifier
+        visual[0].linear_head[1] = nn.Identity()  # remove the classifier
 
         if vision_cfg.patch_dropout > 0:
-            visual.transformer = nn.Sequential(
+            visual[0].transformer = nn.Sequential(
                 PatchDropout(vision_cfg.patch_dropout) if vision_cfg.patch_dropout > 0. else nn.Identity(),
                 visual.transformer
             )

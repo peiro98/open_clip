@@ -1,8 +1,12 @@
 import logging
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.transforms as T
 from tqdm import tqdm
+from PIL import Image
+import numpy as np
 
 from open_clip import get_input_dtype, get_tokenizer, build_zero_shot_classifier, \
     IMAGENET_CLASSNAMES, OPENAI_IMAGENET_TEMPLATES
@@ -68,6 +72,33 @@ def zero_shot_eval(model, data, epoch, args):
             use_tqdm=True,
         )
 
+    expls = []
+    expls_images = []
+    if hasattr(model.visual, 'explain'):
+        with torch.no_grad():
+            device = model.visual[0].linear_head[0].weight.device
+            model.visual[0].linear_head.linear = nn.Linear(768, 1000, bias=False).to(device)
+            model.visual[0].linear_head.linear.weight.copy_(classifier.T)
+
+       
+        input_dtype = get_input_dtype(args.precision)
+        topil = T.ToPILImage()
+        import pdb; pdb.set_trace()
+        for images, target in tqdm(data['imagenet-val'].dataloader, unit_scale=args.batch_size):
+            images = images.to(device=args.device, dtype=input_dtype)
+            target = target.to(args.device)
+
+            with autocast():
+                # predict
+                for image in images.unbind(0):
+                    output = model.visual.explain(image.unsqueeze(0))
+                    expls.append((255*output['explanation']).astype(np.uint8))#.save('out.png')
+                    expls_images.append((255*image[:3]).cpu().numpy().astype(np.uint8))#.save('out.png')
+            break
+                    
+        with torch.no_grad():
+            model.visual[0].linear_head.linear = nn.Identity().to(device)
+
     logging.info('Using classifier')
     results = {}
     if 'imagenet-val' in data:
@@ -81,4 +112,4 @@ def zero_shot_eval(model, data, epoch, args):
 
     logging.info('Finished zero-shot imagenet.')
 
-    return results
+    return results, expls, expls_images

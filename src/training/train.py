@@ -9,6 +9,7 @@ import torch
 import torch.nn.functional as F
 from torch.nn.parallel.distributed import DistributedDataParallel
 
+
 try:
     import wandb
 except ImportError:
@@ -240,7 +241,12 @@ def evaluate(model, data, epoch, args, tb_writer=None):
     device = torch.device(args.device)
     model.eval()
 
-    zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
+    zero_shot_metrics, expls, expls_images = zero_shot_eval(model, data, epoch, args)
+    for i, (image_array, image_array_og) in enumerate(zip(expls, expls_images)):
+        # Log each image using tf.summary.image
+        image_array = np.transpose(image_array, (2, 0, 1))
+        tb_writer.add_image(f"Image_{i}", image_array, global_step=epoch)
+        #tb_writer.add_image(f"Image_og_{i}", image_array_og, global_step=epoch)
     metrics.update(zero_shot_metrics)
 
     autocast = get_autocast(args.precision)
