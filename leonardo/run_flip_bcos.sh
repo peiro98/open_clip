@@ -35,8 +35,8 @@ srun --cpu_bind=v --accel-bind=gn python -u training/main.py \
 	--precision amp \
 	--workers 8 \
 	--model $1 \
-	--torchcompile \
 	--warmup 2000 \
 	--imagenet-val ${IMAGENET2012_VAL/cineca/leonardo}/ \
 	--local-loss \
 	--gather-with-grad \
+	--zeroshot-frequency 1
