@@ -133,7 +133,7 @@ def _build_vision_tower(
         if vision_cfg.patch_dropout > 0:
             visual[0].transformer = nn.Sequential(
                 PatchDropout(vision_cfg.patch_dropout) if vision_cfg.patch_dropout > 0. else nn.Identity(),
-                visual.transformer
+                visual[0].transformer
             )
 
         visual.image_size = vision_cfg.image_size

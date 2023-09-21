@@ -83,7 +83,6 @@ def zero_shot_eval(model, data, epoch, args):
        
         input_dtype = get_input_dtype(args.precision)
         topil = T.ToPILImage()
-        import pdb; pdb.set_trace()
         for images, target in tqdm(data['imagenet-val'].dataloader, unit_scale=args.batch_size):
             images = images.to(device=args.device, dtype=input_dtype)
             target = target.to(args.device)
